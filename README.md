@@ -53,7 +53,7 @@ Password: `0x3b 0x2b 0x22 0x6d 0x31 0x7a 0x64 0x51`
 
 ## Hanoi
 
-#### Exploit: Overflowing a the checksum
+#### Exploit: Overflowing the checksum
 
 Things are getting harder! Here we are exposed to buffer overflows.
 
