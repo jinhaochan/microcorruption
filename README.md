@@ -103,3 +103,25 @@ We put in an input long enough, so that it's able to overflow into the return ad
 *Remember about address endian!
 
 Password: `AAAAAAAAAAAAAAAAFD`
+
+## Johannesburg
+
+#### Exploit: Overflowing the return address with a checksum
+
+Yet another buffer overflow question, but this one has a small twist to it.
+
+In the `login` function, they have this compare operation that checks if the address is set to `0xc6`
+
+`4578:  f190 c600 1100 cmp.b	#0xc6, 0x11(sp)`
+
+The logic checks if the input is too long, and it if overwrites that value.
+
+If the address space does not contain `0xc6`, it stops the program immediately, as it has determined that the user input is too long, and has overwritten that address space.
+
+`ret` is called directly after this, and here we aim to redirect it the `unlock_door` function.
+
+The solution is pretty simple: We send in a longer than normal input, with the value `0xc6` at the correct position `0x11(sp)` (that is, 17 addresses down from the current `sp` address), and we end the input string off with the address of `unlock_door` (endian!)
+
+Because `0xc6` is not anywhere on the ASCII table, we cant send a string. Instead, we send the hex equivalent.
+
+Password: `4141414141414141414141414141414141c64644`
