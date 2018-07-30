@@ -112,7 +112,16 @@ Yet another buffer overflow question, but this one has a small twist to it.
 
 In the `login` function, they have this compare operation that checks if the address is set to `0xc6`
 
-`4578:  f190 c600 1100 cmp.b	#0xc6, 0x11(sp)`
+```
+...
+4578:  f190 c600 1100 cmp.b	#0xc6, 0x11(sp)
+457e:  0624           jeq	#0x458c <login+0x60>
+4580:  3f40 ff44      mov	#0x44ff "Invalid Password Length: password too long.", r15
+4584:  b012 f845      call	#0x45f8 <puts>
+4588:  3040 3c44      br	#0x443c <__stop_progExec__>
+458c:  3150 1200      add	#0x12, sp
+4590:  3041           ret
+```
 
 The logic checks if the input is too long, and it if overwrites that value.
 
