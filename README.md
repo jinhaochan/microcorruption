@@ -21,7 +21,7 @@ Go to the function `create_password` to find the password created.
 44b0:  3041           ret
 ```
 
-Password: `0x31 0x3d 0x6a 0x6b 0x67 0x7a 0x3c`
+Password (Hex): `313d6a6b677a3c`
 
 ## Sydney
 
@@ -49,7 +49,7 @@ In this question, we take note of the concept of endianness.
 
 So `0x2b3b` is really `0x3b` `0x2b`
 
-Password: `0x3b 0x2b 0x22 0x6d 0x31 0x7a 0x64 0x51`
+Password (Hex): `3b2b226d317a6451`
 
 ## Hanoi
 
@@ -71,7 +71,7 @@ When we key in our input, we observe that it starts at address `0x2400`
 
 This means that we just need to key in a long enough input starting at `0x2400` and slot in `0x31` at address `0x2410`
 
-Password: `AAAAAAAAAAAAAAAA1`
+Password (String): `AAAAAAAAAAAAAAAA1`
 
 ## Cusco
 
@@ -102,7 +102,7 @@ We put in an input long enough, so that it's able to overflow into the return ad
 
 *Remember about address endian!
 
-Password: `AAAAAAAAAAAAAAAAFD`
+Password (String): `AAAAAAAAAAAAAAAAFD`
 
 ## Johannesburg
 
@@ -129,8 +129,31 @@ If the address space does not contain `0xc6`, it stops the program immediately, 
 
 `ret` is called directly after this, and here we aim to redirect it the `unlock_door` function.
 
-The solution is pretty simple: We send in a longer than normal input, with the value `0xc6` at the correct position `0x11(sp)` (that is, 17 addresses down from the current `sp` address), and we end the input string off with the address of `unlock_door` (endian!)
+The solution is pretty simple: We send in a longer than normal input, with the value `0xc6` at the correct position `0x11(sp)` (that is, 17 addresses down from the current `sp` address), and we end the input string off with the address of `unlock_door` `0x46 0x44` (endian!)
 
-Because `0xc6` is not anywhere on the ASCII table, we cant send a string. Instead, we send the hex equivalent.
+Because `0xc6` is not anywhere on the ASCII table, we cant send a string. Instead, we send the hex equivalent, wuth the address of `unlock_door` at the end.
 
-Password: `4141414141414141414141414141414141c64644`
+Password (Hex): `4141414141414141414141414141414141c64644`
+
+### Reykjavik
+
+#### Exploit: Static Analysis
+
+This one is quite tricky, because not all of the addresses and instructions are shown.
+
+There this long arcane encryption algorithm, which you don't have to sit down and look at (it loops 256 times in case you were wondering)
+
+Instead, we step through the program right after you key in your input. Because the address are not shown in your console below, it can only be seen from the screen on the left, which shows you your current program counter instruction.
+
+After keying in a random password, and stepping through a few times, we see this instruction
+
+```
+b490 0e1d dcff
+cmp #0x1d0e, -0x24(r4)
+```
+
+Where `-0x24(r4)` is the address of your input.
+
+Put simply... we key in an input of `0x0e 0x1d`, and we pass the check!
+
+Password (Hex): `0e1d`
